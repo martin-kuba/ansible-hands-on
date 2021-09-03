@@ -1,0 +1,12 @@
+- name: "Moje první hra"
+  hosts: all
+  remote_user: debian
+  tasks:
+
+    - name: "zobraz nějaká fakta o stroji"
+      debug:
+        msg: "operační systém je {{ ansible_facts.distribution }} {{ ansible_facts.distribution_major_version }} {{ ansible_facts.distribution_release }}"
+
+    - name: "zobraz vybranou proměnnou"
+      debug:
+        var: ansible_facts.default_ipv4

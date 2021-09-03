@@ -1,0 +1,140 @@
+- name: "Hra ukazující co nejvíc vlastností Ansible"
+  hosts: all
+  remote_user: root
+  vars:
+    instaluj_apache: yes
+    nadpis_html: "Tady je Krakonošovo"
+
+  # pre_tasks jsou provedeny nejdřív
+  pre_tasks:
+
+    - name: "zkontrola verze Ansible"
+      assert:
+        that:
+          - ansible_version is defined
+          - ansible_version.full is version_compare('2.11', '>=')
+        msg: "Required Ansible core version is 2.11+"
+      tags: always
+
+  # role jsou podprogramy, jsou prováděné po pre_tasks a před tasks
+  roles:
+    # role pro získání TLS certifikátů od Let's Encrypt CA
+    - cesnet.certbot_certs
+
+  # handler je proveden je jednou při více upozorněních pomocí "notify:"
+  handlers:
+
+    - name: "restart apache"
+      service:
+        name: apache2
+        state: restarted
+
+  tasks:
+     - name: "blok sdílející podmínku"
+       when: instaluj_apache
+       block:
+        - name: "instalace apache"
+          apt:
+            name: apache2
+            state: present
+
+        - name: "nastavení hlavní HTML stránky"
+          copy:
+            dest: /var/www/html/index.html
+            content: |
+              <!DOCTYPE html>
+              <html lang="cs">
+              <header>
+                 <meta charset="UTF-8">
+                 <title>{{ nadpis_html }}</title>
+              </header>
+              <body>
+              <h1>{{ nadpis_html }}</h1>
+              </body>
+              </html>
+            owner: root
+            group: root
+            mode: '0644'
+
+        - name: "povolení potřebných modulů Apache"
+          apache2_module:
+            name: "{{ item }}"
+            state: present
+          loop:
+            - headers
+            - ssl
+            - rewrite
+            - http2
+          notify:
+            - "restart apache"
+
+        - name: "zakomentování SSLCipherSuite v ssl.conf"
+          lineinfile:
+            path: "/etc/apache2/mods-enabled/ssl.conf"
+            regexp: 'SSLCipherSuite HIGH:!aNULL'
+            line: ' #SSLCipherSuite HIGH:!aNULL'
+          notify:
+            - "restart apache"
+
+        - name: "zakomentování SSLProtocol v ssl.conf"
+          lineinfile:
+            path: "/etc/apache2/mods-enabled/ssl.conf"
+            regexp: 'SSLProtocol all -SSLv3'
+            line: ' #SSLProtocol all -SSLv3'
+          notify:
+            - "restart apache"
+
+        - name: "nastavení TLS správně"
+          blockinfile:
+            dest: "/etc/apache2/mods-enabled/ssl.conf"
+            marker: "# {mark} ANSIBLE MANAGED BLOCK"
+            insertbefore: '</IfModule>'
+            block: |
+              # see https://mozilla.github.io/server-side-tls/ssl-config-generator/?server=apache-2.4.38&openssl=1.1.1b&hsts=yes&profile=modern
+              SSLProtocol             all -SSLv3 -TLSv1 -TLSv1.1
+              SSLCipherSuite          ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256
+              SSLHonorCipherOrder     on
+              SSLCompression          off
+              SSLSessionTickets       off
+              SSLUseStapling          on
+              SSLStaplingResponderTimeout 5
+              SSLStaplingReturnResponderErrors off
+              SSLStaplingCache        shmcb:/var/run/ocsp(128000)
+          notify:
+            - "restart apache"
+
+        - name: "vytvoření konfigurace mysite.conf"
+          copy:
+            dest: /etc/apache2/sites-available/mysite.conf
+            content: |
+              <VirtualHost *:80>
+                ServerName {{ inventory_hostname }}
+                RewriteEngine On
+                RewriteRule ^(.*)$ https://%{HTTP_HOST}$1 [R=301,L]
+              </VirtualHost>
+              <VirtualHost *:443>
+                ServerName {{ inventory_hostname }}
+                DocumentRoot /var/www/html
+                SSLEngine on
+                SSLCertificateFile /etc/letsencrypt/live/{{ inventory_hostname }}/fullchain.pem
+                SSLCertificateKeyFile /etc/letsencrypt/live/{{ inventory_hostname }}/privkey.pem
+                Header always set Strict-Transport-Security "max-age=63072000"
+              </VirtualHost>
+          notify: "restart apache"
+
+        - name: "odstranění výchozích Apache sites"
+          file:
+            path: "/etc/apache2/sites-enabled/{{ item }}"
+            state: absent
+          with_items:
+            - 000-default.conf
+            - default-ssl.conf
+          notify: "restart apache"
+
+        - name: "aktivace mysite.conf"
+          command: a2ensite "{{ item }}"
+          args:
+            creates: "/etc/apache2/sites-enabled/{{ item }}"
+          loop:
+            - mysite.conf
+          notify: "restart apache"

@@ -1,0 +1,71 @@
+---
+
+- name: "Hra pro povolení přímého ssh spojení na roota"
+  hosts: all
+  remote_user: debian
+  tasks:
+
+    - name: "jako uživatel debian přepiš soubor povolených ssh klíčů uživatele root"
+      become: yes
+      become_user: root
+      copy:
+        remote_src: yes
+        src: /home/debian/.ssh/authorized_keys
+        dest: /root/.ssh/authorized_keys
+        owner: root
+        group: root
+        mode: '0600'
+
+- name: "Hra prováděná přímým připojením na roota"
+  hosts: all
+  remote_user: root
+  tasks:
+
+    - name: "nastavení message-of-the-day"
+      copy:
+        dest: /etc/motd
+        content: |
+
+          Tohle je můj stroj spravovaný Ansiblem.
+          Ruce pryč!
+
+    - name: "instalace českého locale"
+      locale_gen:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - "en_US.UTF-8"
+        - "cs_CZ.UTF-8"
+
+    - name: "nastavení časové zóny"
+      timezone:
+        name: Europe/Prague
+
+    - name: "oldstable Debian potřebuje povolit změnu repo"
+      command: apt-get update -y --allow-releaseinfo-change
+
+    - name: "instalace softwarových balíků"
+      apt:
+        name:
+          - vim
+          - htop
+          - locate
+
+    - name: "oprava nastavení vimu (kopírování myší, barvy na tmavém pozadí, zapamatování pozice kurzoru)"
+      copy:
+        dest: /etc/vim/vimrc.local
+        content: |
+          " fix mouse
+          set mouse=r
+          " syntax highlighting
+          syntax on
+          set background=dark
+          " jump to the last position when reopening a file
+          au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
+
+    - name: "zrušení načítání defaults pro vim"
+      lineinfile:
+        path: /etc/vim/vimrc
+        regexp: 'let g:skip_defaults_vim = 1'
+        line: 'let g:skip_defaults_vim = 1'
+

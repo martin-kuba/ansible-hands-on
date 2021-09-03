@@ -1,0 +1,9 @@
+# ignore the password file
+.password
+hosts
+
+# Ignore IntelliJ project files #
+*.iml
+*.ipr
+*.iws
+.idea/
