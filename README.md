@@ -27,7 +27,7 @@ ssh-add -L
 ## Vytvoření virtuálního stroje na pokusy v OpenStacku
 
 - přihlaste se na [https://cloud.muni.cz/](https://cloud.muni.cz/)
-- zobrazte strránku [Compute - Key Pairs](https://dashboard.cloud.muni.cz/project/key_pairs)
+- zobrazte stránku [Compute - Key Pairs](https://dashboard.cloud.muni.cz/project/key_pairs)
 - pokud tam žádný Key Pair nemáte, klikněte na **Import Public Key** a přidejte tam svůj ssh klíč pojmenovaný po sobě, tj. do **Key Pair Name** zadejte třeba "Pepa" (bude to jediný zobrazovaný údaj, podle kterého půjde poznat vlastník VM), zvolte **Key Type** SSH Key, a do **Public Key** zkopírujte svůj ssh klíč zjištěný v předchozím bodu
 - zobrazte stránku [Compute - Instances](https://dashboard.cloud.muni.cz/project/instances/)
 - zkontrolujte, že vlevo nahoře vedle loga OpenStack máte zvolený svůj osobní projekt (pojmenovaný podle vašeho e-INFRA id) 
@@ -55,7 +55,7 @@ $ ssh debian@ip-78-128-250-231.flt.cloud.muni.cz
 
 Oklonujte si tuto gitovou repo: 
 ```bash
-git clone git@github.com:martin-kuba/ansible-hands-on.git --recurse-submodules
+git clone https://github.com/martin-kuba/ansible-hands-on.git --recurse-submodules
 cd ansible-hands-on
 ```
 
