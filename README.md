@@ -9,6 +9,10 @@ sudo apt-get update
 sudo apt install ansible
 ```
 
+Pokud máte jiný Linux než Mint nebo Ubuntu, postupujte podle návodu [Installing Ansible on specific operating systems](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#installing-ansible-on-specific-operating-systems).
+
+Pokud máte MS Windows, nainstalujte si Ubuntu do WSL podle návodu [How to install Windows Subsystem for Linux (WSL) on Windows 10](https://www.windowscentral.com/install-windows-subsystem-linux-windows-10).
+
 Dokumentace:
 - [Ansible Documentation](https://docs.ansible.com/ansible/latest/)
 - [Index of all modules](https://docs.ansible.com/ansible/latest/collections/index_module.html#ansible-builtin)
