@@ -34,25 +34,25 @@ ssh-add -L
 - zobrazte stránku [Compute - Key Pairs](https://dashboard.cloud.muni.cz/project/key_pairs)
 - pokud tam žádný Key Pair nemáte, klikněte na **Import Public Key** a přidejte tam svůj ssh klíč pojmenovaný po sobě, tj. do **Key Pair Name** zadejte třeba "Pepa" (bude to jediný zobrazovaný údaj, podle kterého půjde poznat vlastník VM), zvolte **Key Type** SSH Key, a do **Public Key** zkopírujte svůj ssh klíč zjištěný v předchozím bodu
 - zobrazte stránku [Compute - Instances](https://dashboard.cloud.muni.cz/project/instances/)
-- zkontrolujte, že vlevo nahoře vedle loga OpenStack máte zvolený svůj osobní projekt (pojmenovaný podle vašeho e-INFRA id) 
+- zkontrolujte, že vlevo nahoře vedle loga OpenStack máte zvolený projekt **perun-cesnet-muni**
 - klikněte na tlačítko **Launch Instance** vpravo nahoře, zobrazí se wizard pro vytvoření nového virtuálného stroje
   - v položce **Detail** zvolte hostname, např. "pepa-1"
   - v položce **Source** v seznamu **Select Boot Source** zvolte "Image" a v seznamu **Available** klikněte vpravo na šipku u image **debian-10-x86_64**
   - v položce **Flavor** klikněte vpravo na šipku u **standard.small** (1 CPU, 2GB RAM, 80GB HDD)
-  - v položce **Network** vyberte kliknutém na šipku vpravo "personal-project-network-subnet"
+  - v položce **Networks** vyberte kliknutém na šipku vpravo síť **group-project-network**
   - klikněte na tlačítko **Launch instance** ve wizardu vpravo dole
 - instance VM v tomto okamžiku má jen neveřejnou IP adresu, je potřeba přiřadit veřejnou "floating IP" 
-  - navštivte stránku [Network - Floating IPs](https://dashboard.cloud.muni.cz/project/floating_ips/) a zkontrolujte, že máte nějakou IP alokovanou, pokud ne, jednu alokujte z poolu public-cesnet-78-128-250-PERSONAL 
+  - navštivte stránku [Network - Floating IPs](https://dashboard.cloud.muni.cz/project/floating_ips/) a zkontrolujte, že je volná nějaká IP, pokud ne, klikněte na tlačítko "Allocate IP To Project" a jednu alokujte z poolu public-muni-147-251-21-GROUP
   - vraťte se na stránku [Compute - Instances](https://dashboard.cloud.muni.cz/project/instances/)
-  - klikněte v seznamu instancí VM v řádku této instance vpravo na tlačítko **Associate floating IP**
+  - klikněte v seznamu instancí VM v řádku této instance ve sloupci Actions na seletion list a vyberte v něm **Associate floating IP**
   - vyberte volnou floating IP adresu a klikněte na tlačítko **Associate**
   - zkopírujte si do clipboardu tu druhou zobrazenou IP adresu, to je ta veřejná
 - zjistěte, na jaké DNS jméno je IP mapována a přihlaste na stroj pomocí ssh na uživatele "debian", např:
 ```bash
-$ host 78.128.250.231
-231.250.128.78.in-addr.arpa domain name pointer ip-78-128-250-231.flt.cloud.muni.cz.
+$ host 147.251.21.230
+230.21.251.147.in-addr.arpa domain name pointer ip-147-251-21-230.flt.cloud.muni.cz.
 
-$ ssh debian@ip-78-128-250-231.flt.cloud.muni.cz
+$ ssh debian@ip-147-251-21-230.flt.cloud.muni.cz
 
 ```
 ## Příprava Ansible
@@ -65,7 +65,7 @@ cd ansible-hands-on
 
 Vytvořte tzv. inventory - soubor `hosts` obsahující jméno ovládaného stroje, např.:
 ```bash
-echo ip-78-128-250-231.flt.cloud.muni.cz >hosts
+echo ip-147-251-21-230.flt.cloud.muni.cz >hosts
 ```
 
 ## První playbook
@@ -82,15 +82,15 @@ Výstup by měl vypadat nějak takto:
 PLAY [Moje první hra] ***************************************************************************************************************************************************************************************************
 
 TASK [Gathering Facts] **************************************************************************************************************************************************************************************************
-ok: [ip-78-128-250-231.flt.cloud.muni.cz]
+ok: [ip-147-251-21-230.flt.cloud.muni.cz]
 
 TASK [zobraz nějaká fakta o stroji] *************************************************************************************************************************************************************************************
-ok: [ip-78-128-250-231.flt.cloud.muni.cz] => {
+ok: [ip-147-251-21-230.flt.cloud.muni.cz] => {
     "msg": "operační systém je Debian 10 buster"
 }
 
 TASK [zobraz vybranou proměnnou] ****************************************************************************************************************************************************************************************
-ok: [ip-78-128-250-231.flt.cloud.muni.cz] => {
+ok: [ip-147-251-21-230.flt.cloud.muni.cz] => {
     "ansible_facts.default_ipv4": {
         "address": "172.16.2.175",
         "alias": "eth0",
@@ -106,7 +106,7 @@ ok: [ip-78-128-250-231.flt.cloud.muni.cz] => {
 }
 
 PLAY RECAP **************************************************************************************************************************************************************************************************************
-ip-78-128-250-231.flt.cloud.muni.cz : ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+ip-147-251-21-230.flt.cloud.muni.cz : ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
 
 ```
 
