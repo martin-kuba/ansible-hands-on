@@ -128,3 +128,12 @@ ansible-playbook playbook_3.yml
 ```
 
 Nainstaluje Apache s TLS certifikáty od Let's Encrypt.
+
+## Bonus - instalace Peruna
+
+Na stroj lze nainstalovat Peruna pomocí playbooku v repo [https://github.com/CESNET/perun-ansible](https://github.com/CESNET/perun-ansible).
+
+Jen je potřeba zase odinstalovat Apache jako službu, aby se nepral o TCP porty s Apachem v kontejneru:
+```bash
+apt purge apache2
+```
